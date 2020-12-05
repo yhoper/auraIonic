@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Bienvenido</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid style="margin-top: 4rem; margin-bottom: 4rem;">
+    <ion-row>
+      <ion-col>
+        <center>
+          <img src="assets/logo.png">
+        </center>
+      </ion-col>
+    </ion-row>
+    
+    <form [formGroup]="formLogin" (ngSubmit)="onSubmit()" novalidate>
+      
+      <ion-item lines="full">
+        <ion-label position="floating">Usuario</ion-label>
+        <ion-input formControlName="usuario" type="text"></ion-input>
+      </ion-item>
+      <ion-text color="danger">
+        <span class="dangersize" *ngIf="submitted && errorCtr.usuario.errors?.required">
+          El usuario es requerido.
+        </span>
+        <span class="dangersize" *ngIf="submitted && errorCtr.usuario.errors?.minlength">
+          Verifique su usuario.
+        </span>
+      </ion-text>
+      
+      
+      <ion-item lines="full">
+        <ion-label position="floating">Clave</ion-label>
+        <ion-input formControlName="password" type="password"></ion-input>
+      </ion-item>
+      <ion-text color="danger">
+        <span class="dangersize" *ngIf="submitted && errorCtr.password.errors?.required">
+          El password es requerido.
+        </span>
+        <span class="dangersize" *ngIf="submitted && errorCtr.password.errors?.minlength">
+          Su clave es muy corta.
+        </span>
+      </ion-text>
+      
+      <ion-item lines="full">
+        <ion-checkbox style="margin-right: 10px;" formControlName="remember" name="remember"></ion-checkbox> Recuerdame
+      </ion-item>
+      
+      <ion-row>
+        <ion-col>
+          <ion-button type="submit" expand="block">Entrar</ion-button>
+        </ion-col>
+      </ion-row>
+    </form>
+  </ion-grid>
+</ion-content>
