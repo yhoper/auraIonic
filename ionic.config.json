@@ -1,5 +1,7 @@
 {
   "name": "auraIonic",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }
