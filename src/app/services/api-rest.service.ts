@@ -28,4 +28,10 @@ export class ApiRestService {
   logout(): Observable<any> {
     return this.http.get(`${this.urlAuth}+logout`);
   }
+
+  getCategories(userid):Observable<any>{
+    return this.http.get(`${this.urlAuth}showdocuments`)
+  }
+
+
 }
