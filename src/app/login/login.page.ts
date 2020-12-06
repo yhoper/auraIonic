@@ -32,9 +32,6 @@ export class LoginPage implements OnInit {
           error => console.error(error.exception)
           );
           
-          //console.log(checkRemember);
-          
-          
           this.formLogin = this.formBuilder.group({
             usuario: ['', [Validators.required, Validators.minLength(4)]],
             password: ['', [Validators.required, Validators.minLength(4)]],
@@ -59,7 +56,7 @@ export class LoginPage implements OnInit {
                   this.getUser(response, false);
                 }
               },
-              error => alert(`Debo llamar un modal con el error ${error.error.message}`),
+              error => this.apirest.alertAcept('Atención', 'Verifique sus credenciales e intente nuevamente.'),
               )
             }
           }
@@ -88,9 +85,8 @@ export class LoginPage implements OnInit {
                       () => console.log('Stored guradado'),
                       error => console.error(`Error storing item, ${error}`)
                       );
-                    } else if (rememberuser==false){
-                      this.router.navigateByUrl(`tabs/tab1`);
                     }
+                    this.router.navigateByUrl(`tabs/tab1`);
                   },
                   error=>(alert(error))
                   );
