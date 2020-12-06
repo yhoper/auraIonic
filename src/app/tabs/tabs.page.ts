@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ApiRestService } from "../services/api-rest.service"
 
 @Component({
   selector: 'app-tabs',
@@ -6,7 +7,17 @@ import { Component } from '@angular/core';
   styleUrls: ['tabs.page.scss']
 })
 export class TabsPage {
-
-  constructor() {}
-
-}
+  
+  constructor(
+    private apirest: ApiRestService,
+    ) {}
+    
+    refresh(){
+      this.apirest.alertAcept('Actualizar', 'Se estará sincronizando su dispositivo, por favor espere.')
+    }
+    
+    exitApp() {
+      this.apirest.alertAceptCancel('Atención', '¿Seguró desea salir de la apliación?')
+    }
+  }
+  
