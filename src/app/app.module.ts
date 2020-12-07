@@ -12,6 +12,8 @@ import { HttpClientModule } from '@angular/common/http';
 
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
 import { SQLite } from '@ionic-native/sqlite/ngx';
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
@@ -20,6 +22,7 @@ import { SQLite } from '@ionic-native/sqlite/ngx';
     StatusBar,
     SplashScreen,
     SQLite,
+    AndroidPermissions,
     NativeStorage,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
