@@ -10,13 +10,13 @@
   <ion-list>
     <ion-item>
       <ion-text >
-        <ion-label text-wrap color="primary"><h2>Para el uso de esta aplicación es <span color="danger">obligatorio</span> dar accesos para descargar archvhivos a su dispositivo</h2></ion-label>
+        <ion-label text-wrap color="primary"><h2>Para el uso de esta aplicación es <span color="danger">obligatorio</span> dar accesos para descargar arvhivos a su dispositivo</h2></ion-label>
       </ion-text>
     </ion-item>
     <ion-item>
       
-      <ion-label><h3>Permisos para descargar archvivos</h3></ion-label>
-      <ion-toggle ></ion-toggle>
+      <ion-label><h3>Permisos para descargar archvivos </h3></ion-label>
+      <ion-toggle [(ngModel)]="resAndroidPermissions" (ngModelChange)="updatePermissions($event)" disabled={{resAndroidPermissions}}></ion-toggle>
     </ion-item>
     
     

@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { NativeStorage } from '@ionic-native/native-storage/ngx';
+import { ApiRestService } from "../services/api-rest.service"
 
 @Component({
   selector: 'app-tab2',
@@ -6,7 +8,46 @@ import { Component } from '@angular/core';
   styleUrls: ['tab2.page.scss']
 })
 export class Tab2Page {
-
-  constructor() {}
-
-}
+  resAndroidPermissions;
+  androidPermissions;
+  constructor(
+    private nativeStorage: NativeStorage,
+    private apirest: ApiRestService, 
+    ) {
+      
+      this.nativeStorage.getItem('androidPermission').then(data => {
+        this.resAndroidPermissions = data;
+      }); (error) => {
+        console.log(error);
+      }
+      
+    }
+    
+    ionViewWillEnter() {
+      
+      this.nativeStorage.getItem('androidPermission').then(data => {
+        this.resAndroidPermissions = data;
+      }); (error) => {
+        console.log(error);
+      }
+    }
+    
+    callModalPermisssion() {
+      this.apirest.ionPermission().then((value) => {
+        this.nativeStorage.setItem('androidPermission', value)
+      });
+    }
+    
+    ngOnInit() {
+      
+    }
+    updatePermissions(e){
+      this.apirest.ionPermissionInitial().then((value) => {
+        this.nativeStorage.setItem('androidPermission', value)
+        if (value == false) this.callModalPermisssion();
+      }); 
+      
+    } 
+    
+  }
+  

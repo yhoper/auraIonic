@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AlertController, NavController } from '@ionic/angular';
-
+import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
+import { Platform } from '@ionic/angular';
+import { NativeStorage } from '@ionic-native/native-storage/ngx';
 
 @Injectable({
   providedIn: 'root'
@@ -10,10 +12,14 @@ import { AlertController, NavController } from '@ionic/angular';
 export class ApiRestService {
   urlAuth ='https://auradoc.bcnschool.net/api/auth/';
   categoryUrl ='http://auradoc.bcnschool.net/api/v1/';
+  permisos;
   constructor(
     private http: HttpClient, 
     public alertController: AlertController,
-    public navCtrl: NavController
+    private platform: Platform,
+    private androidPermissions: AndroidPermissions,
+    public navCtrl: NavController,
+    private nativeStorage: NativeStorage
     ) { }
     
     login(data: any): Observable<any> {
@@ -89,9 +95,67 @@ export class ApiRestService {
       });
     }
     
-    
-    
-    
-    
-  }
-  
+    ionPermissionInitial(): Promise<boolean> {
+      return new Promise(resolve => {
+        this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.READ_EXTERNAL_STORAGE).then(
+          result => {
+            resolve(result.hasPermission);
+          },
+          err => this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.READ_EXTERNAL_STORAGE)
+          );
+        });
+      }
+      
+      ionPermission():Promise<boolean>{
+        return new Promise(resolve => {
+          this.androidPermissions.hasPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
+          .then(status => {
+            if (status.hasPermission) {
+              resolve(status.hasPermission);
+            }else{
+              this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
+              .then(status => {
+                if (status.hasPermission) {
+                  resolve(status.hasPermission);
+                } else {
+                  resolve(status.hasPermission);
+                }
+              });
+            }
+          });
+        });
+      }
+      
+      
+      
+      ionPermissionssss(){
+        this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.READ_EXTERNAL_STORAGE).then(
+          result => {
+            this.permisos = result.hasPermission;
+          },
+          err => this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.READ_EXTERNAL_STORAGE)
+          );
+          
+          this.androidPermissions.hasPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
+          .then(status => {
+            if (status.hasPermission) {
+              this.permisos=status.hasPermission;
+            }
+            else {
+              this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.WRITE_EXTERNAL_STORAGE)
+              .then(status => {
+                if (status.hasPermission) {
+                  this.permisos=status.hasPermission;
+                } else {
+                  this.permisos=status.hasPermission;
+                }
+              });
+            }
+          });
+          return this.permisos;
+        }
+        
+        
+        
+      }
+      
