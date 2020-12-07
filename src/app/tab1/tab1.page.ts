@@ -11,11 +11,11 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['tab1.page.scss']
 })
 export class Tab1Page {
-  categories: Observable<any>;
   cateogoriaRaiz: Observable<any>;
+  categories: Observable<any>;
   categoriesSqlite: Observable<any>;
   categoriaSinInternet;
-  
+  categoriaRoot;
   
   createDBsqlite;
   
@@ -27,57 +27,36 @@ export class Tab1Page {
     private activatedRoute: ActivatedRoute
     
     ) { 
-      
-      
     }
     
-
-  doRefresh(event) {
-    console.log('Begin async operation');
-
-    setTimeout(() => {
-      this.refreshPage()
-      
-      console.log('Async operation has ended');
-      event.target.complete();
-    }, 2000);
-  }
-
+    doRefresh(event) {
+      setTimeout(() => {
+        this.refreshPage()
+        event.target.complete();
+      }, 2000);
+    }
+    
     ionViewWillEnter() {
       this.refreshPage()
     } 
-
+    
     refreshPage(){
-      //alert("Refrescando")
-      //1) Llamar las categorias API REST
       this.categories = this.apirest.getCategories(2);
-      //2) Llamar las categorias Raiz API REST
       this.cateogoriaRaiz = this.apirest.getCategoryRoot(2);
-      //3) Crear la BD
       this.createDbSqlite(this.categories, this.cateogoriaRaiz)
     }
     
     
-    
     ngOnInit(): void {
-      
       this.router.events.pipe(
         filter((event: RouterEvent) => event instanceof NavigationEnd),
         ).subscribe((data) => {
-          console.log("******algo******");
-          console.log(data.url);
           if (data.url ==='/tabs/tab1'){
             this.ionViewWillEnter();
           }
-          console.log("algo");
         });
-        
-        
-        
       }
       
-      /*ngOnInit() {
-      }*/
       
       createDbSqlite(_categorias, _categoriaraiz) {
         return this.sqlite.create({
@@ -85,8 +64,30 @@ export class Tab1Page {
           location: 'default'
         })
         .then((db: SQLiteObject) => {
-          db.executeSql('CREATE TABLE IF NOT EXISTS categoriaroot(id INT(32), directory VARCHAR(100), name VARCHAR(100), namenew VARCHAR(100), categoryname VARCHAR(100))', [])
-          .then(() => console.log('Se ha creado la BD para Categoria Root'))
+          db.executeSql('CREATE TABLE IF NOT EXISTS categoriaroot(id INT(32), directory TEXT, name VARCHAR(100), namenew VARCHAR(100), categoryname VARCHAR(100), created_at TEXT, updated_at TEXT)', [])
+          .then(() => {
+            _categoriaraiz.forEach(value => {
+              value.forEach(item => {
+                let id = item.id;
+                let directory = item.directory;
+                let name = item.name;
+                let namenew = item.namenew;
+                let categoryname = item.categoryname;
+                let created_at = item.created_at;
+                let updated_at = item.updated_at;
+               console.log(`Data: ${id}, ${directory}, ${name}, ${namenew}, ${categoryname}, ${created_at}, ${updated_at}`)
+                
+                db.executeSql('select * from categoriaroot WHERE id =' + `${id}` , []).then(data => {
+                  if (data.rows.length > 0) {
+                    this.updateCategoriesrRoot(id, directory, name, namenew, categoryname, created_at, updated_at);
+                  } else {
+                    db.executeSql('INSERT INTO categoriaroot VALUES (?,?,?,?,?,?,?)', [`${id}`, `${directory}`, `${name}`, `${namenew}`, `${categoryname}`, `${created_at}`, `${updated_at}`]).then(() => console.log(`INSERT CATEGORIAS ROOT el id ${id}, de nombre ${name}, y docuemtnos: ${updated_at}`))
+                  }
+                  this.queryCategoriesRoot();
+                })
+              })
+            })
+          })
           /*CRAMOS LA TABLA E INSERTAMOS LA DATA */
           db.executeSql('CREATE TABLE IF NOT EXISTS categorias(id INT(32), name VARCHAR(100), description VARCHAR(100), status VARCHAR(100), documents TEXT)', [])
           .then(() => {
@@ -98,9 +99,7 @@ export class Tab1Page {
                 let status = item.status;
                 let docs = JSON.stringify(item.documents);              
                 db.executeSql('select * from categorias WHERE id =' + `${id}`, []).then(data => {
-                  //alert(data.rows.length);
                   if (data.rows.length > 0) {
-                    console.log("Existe un registro con ese id MANDO A ACTUALIZAR EL REGISTRO");
                     this.updateCategories(id, name, description, status, docs);
                   } else {
                     db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`))
@@ -111,40 +110,37 @@ export class Tab1Page {
             })
           })
         })
-        .catch(e => console.log(e));
-
-       
-        
+        .catch(e =>console.log(e));
       }
       
       updateCategories(id, name, description, status, docs) {
-        // UPDATE Cars SET Name='Skoda Octavia' WHERE Id=3;
         this.sqlite.create({
           name: 'data.db',
           location: 'default'
         })
         .then((db: SQLiteObject) => {
           db.transaction(function (tx) {
-            console.log(tx);
-            console.log("updateCategories");
             var query = `UPDATE categorias SET name=?, description=?, status=? WHERE id=?`;          
             tx.executeSql(query, [name, description, status, id], function (tx, res) {
-              console.log("088888888888888800000000000");
-              console.log("res: " + res);
-              console.log(res);
-              console.log("insertId: " + res.insertId);
-              console.log(res.insertId);
-              console.log("rowsAffected: " + res.rowsAffected);
-              console.log(res.rowsAffected);
-              console.log("vvvvvvvvvvvvvvvvvvv");
-              console.log(res);
-              console.log("aaaaaaaaaaaaaaa");
-              console.log(tx);
             })
           })
         })
       }
       
+      updateCategoriesrRoot(id, directory, name, namenew, categoryname, created_at, updated_at){
+        this.sqlite.create({
+          name: 'data.db',
+          location: 'default'
+        })
+        .then((db: SQLiteObject) => {
+          db.transaction(function (tx) {
+            var query = `UPDATE categoriaroot SET directory=?, name=?, namenew=?, categoryname=?,   created_at=?,  updated_at=? WHERE id=?`;
+            tx.executeSql(query, [directory, name, namenew, categoryname, created_at, updated_at, id], function (tx, res) {
+            })
+          })
+        })
+      }
+
       queryCategories() {
         this.sqlite.create({
           name: 'data.db',
@@ -157,15 +153,36 @@ export class Tab1Page {
             if (data.rows.length > 0) {
               for (var i = 0; i < data.rows.length; i++) {
                 this.categoriaSinInternet.push({ id: data.rows.item(i).id, name: data.rows.item(i).name });
-                //  console.log(data.rows.item(i).id, data.rows.item(i).name);
               }
             }
-            
           }, (error) => {
-            console.log("ERROR categories: " + JSON.stringify(error));
           })
         })
         return this.categoriaSinInternet;
       }
-    }
-    
+      
+      queryCategoriesRoot() {
+        this.sqlite.create({
+          name: 'data.db',
+          location: 'default'
+        }).then((db: SQLiteObject) => {
+          
+          db.executeSql('select * from categoriaroot', []).then(data => {
+            this.categoriaRoot = [];
+            if (data.rows.length > 0) {
+              for (var i = 0; i < data.rows.length; i++) {
+                this.categoriaRoot.push({
+                  id: data.rows.item(i).id,
+                  directory: data.rows.item(i).directory,
+                  name: data.rows.item(i).name,
+                  namenew: data.rows.item(i).namenew,
+                  categoryname: data.rows.item(i).categoryname,
+                });
+              }
+            }
+          }, (error) => {
+          })
+        })
+        return this.categoriaSinInternet;
+      }
+    }    

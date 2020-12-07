@@ -41,7 +41,7 @@ export class ApiRestService {
       return this.http.get(`${this.categoryUrl}categoriesuser/${userid}`);
     }
     
-    getCategoryRoot(userid): Observable<any> {
+    getCategoryRoot(userid): Observable<any> { 
       return this.http.get(`${this.categoryUrl}categoryroot/${userid}`);
     }
     
