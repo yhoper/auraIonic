@@ -15,7 +15,7 @@ import { SQLite } from '@ionic-native/sqlite/ngx';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 import { FileTransfer } from '@ionic-native/file-transfer/ngx';
-
+import { FileOpener } from '@ionic-native/file-opener/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -25,6 +25,7 @@ import { FileTransfer } from '@ionic-native/file-transfer/ngx';
     StatusBar,
     SplashScreen,
     SQLite,
+    FileOpener,
     AndroidPermissions,
     NativeStorage,
     FileTransfer,

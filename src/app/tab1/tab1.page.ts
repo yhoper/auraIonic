@@ -6,6 +6,7 @@ import { Router, ActivatedRoute, NavigationEnd, RouterEvent, Event } from '@angu
 import { filter } from 'rxjs/operators';
 import { Platform, LoadingController } from '@ionic/angular';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
 
 import { FileTransfer, FileUploadOptions, FileTransferObject } from '@ionic-native/file-transfer/ngx';
 
@@ -21,6 +22,7 @@ export class Tab1Page {
   categoriesSqlite: Observable<any>;
   urlAPI ='https://auradoc.bcnschool.net/backend/public/';
   urlDevice = 'file:///storage/emulated/0/Download/AppAura/';
+  
   categoriaSinInternet;
   categoriaRoot;
   createDBsqlite;
@@ -33,7 +35,8 @@ export class Tab1Page {
     private platform: Platform,
     private nativeStorage: NativeStorage,
     private transfer: FileTransfer,
-    public loadingController: LoadingController
+    public loadingController: LoadingController,
+    private fileOpener: FileOpener
     ) { 
       
       
@@ -52,7 +55,12 @@ export class Tab1Page {
       //this.callModalPermisssion()
       this.apirest.ionPermissionInitial().then((value) => {
         this.nativeStorage.setItem('androidPermission', value)
-        if (value == false)  this.callModalPermisssion();
+        if (value == false)  {
+          this.callModalPermisssion();
+        }else{
+          this.categoriesPdfDonwload();
+          this.rootPdfDonwload();
+        }
       });
       this.refreshPage()
     } 
@@ -69,6 +77,11 @@ export class Tab1Page {
     callModalPermisssion(){
       this.apirest.ionPermission().then((value) => {
         this.nativeStorage.setItem('androidPermission', value)
+        //console.log(value);
+        if(value==true){
+          this.categoriesPdfDonwload();
+          this.rootPdfDonwload();
+        }
       });
     }
     
@@ -101,13 +114,16 @@ export class Tab1Page {
                 let categoryname = item.categoryname;
                 let created_at = item.created_at;
                 let updated_at = item.updated_at;
-                console.log(`Data: ${id}, ${directory}, ${name}, ${namenew}, ${categoryname}, ${created_at}, ${updated_at}`)
+                //console.log(`Data: ${id}, ${directory}, ${name}, ${namenew}, ${categoryname}, ${created_at}, ${updated_at}`)
                 
                 db.executeSql('select * from categoriaroot WHERE id =' + `${id}` , []).then(data => {
                   if (data.rows.length > 0) {
                     this.updateCategoriesrRoot(id, directory, name, namenew, categoryname, created_at, updated_at);
                   } else {
-                    db.executeSql('INSERT INTO categoriaroot VALUES (?,?,?,?,?,?,?)', [`${id}`, `${directory}`, `${name}`, `${namenew}`, `${categoryname}`, `${created_at}`, `${updated_at}`]).then(() => console.log(`INSERT CATEGORIAS ROOT el id ${id}, de nombre ${name}, y docuemtnos: ${updated_at}`))
+                    db.executeSql('INSERT INTO categoriaroot VALUES (?,?,?,?,?,?,?)', [`${id}`, `${directory}`, `${name}`, `${namenew}`, `${categoryname}`, `${created_at}`, `${updated_at}`]).then(() => 
+                    console.log(`INSERT CATEGORIAS ROOT`)
+                    //console.log(`INSERT CATEGORIAS ROOT el id ${id}, de nombre ${name}, y docuemtnos: ${updated_at}`)
+                    )
                   }
                   this.queryCategoriesRoot();
                 })
@@ -128,10 +144,13 @@ export class Tab1Page {
                   if (data.rows.length > 0) {
                     this.updateCategories(id, name, description, status, docs);
                   } else {
-                    db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`))
+                    db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => 
+                    console.log(`INSERT CATEGORIAS`)
+                    //console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`)
+                    )
                   }
                   this.queryCategories();
-                  this.pdfDonwload();
+                  
                 })
               })
             })
@@ -213,31 +232,33 @@ export class Tab1Page {
         })
         return this.categoriaSinInternet;
       }
+
+
+  async presentLoading() {
+    const loading = await this.loadingController.create({
+      cssClass: 'my-custom-class',
+      message: 'Espere por favor, estamos actualizando los documentos',
+      duration: 5000
+    });
+    await loading.present();
+
+    const { role, data } = await loading.onDidDismiss();
+    console.log('Loading dismissed!');
+  }
+
+
+  async hideLoader() {
+    const loader = this.loadingController.getTop();
+    (await loader).parentNode.removeChild(await loader);
+  }
+ 
       
-      async presentLoading() {
-        this.loaderToShow = this.loadingController.create({
-          message: 'Espere por favor... estamos actualizando los docuemtnos.'
-        }).then((res) => {
-          res.present();
-          res.onDidDismiss().then((dis) => {
-            console.log('Loading dismissed! after 2 Seconds');
-          });
-        });
-      }
       
-      hideLoader() {
-        setTimeout(() => {
-          this.loadingController.dismiss();
-        }, 4000);
-      }
-      
-      
-      pdfDonwload(){ 
-        this.platform.ready().then(() => { 
-          
-          
-          let loading=this.presentLoading();
-          console.log(loading);
+      categoriesPdfDonwload(){
+       // console.log('ahora estoy en categoriesPDFDownload');
+        this.platform.ready().then(() => {           
+          //console.log(loading);
+          this.presentLoading(); //Open Loading
           
           let pathDevice = this.urlDevice;
           this.categories.forEach(element => {
@@ -246,7 +267,7 @@ export class Tab1Page {
               arregloNuevo.forEach(element => {
                 
                 let url = encodeURI(`${this.urlAPI}${element.directory}`);
-                console.log(url);
+                /*console.log(url);
                 console.log(element.id);
                 console.log(element.user_id);
                 console.log(element.categorization_id);
@@ -255,7 +276,7 @@ export class Tab1Page {
                 console.log(element.namenew);
                 console.log(element.status);
                 console.log(element.updated_at);
-                console.log("******************************FILES**********************************");
+                console.log("******************************FILES**********************************");*/
                 
                 
                 let id= element.id;
@@ -267,20 +288,109 @@ export class Tab1Page {
                 let status= element.status;
                 let updated_at= element.updated_at;
                 
-                var imagePath = `${pathDevice}${namenew}`;
+                var pdfPath = `${pathDevice}${namenew}`;
                 const fileTransfer = this.transfer.create();
-                fileTransfer.download(url, imagePath).then((entry) => {
-                  console.log(entry);
-                  console.log(`download completed: ${imagePath} y su ID es: ${id}, con nombre: ${namenew}`);
+                fileTransfer.download(url, pdfPath).then((entry) => {
+                  //console.log(entry);
+                  //console.log(`download completed: ${pdfPath} y su ID es: ${id}, con nombre: ${namenew}`);
                 }, (error) => {
                   console.log(error);
-                });              
+                });
+                 
               });
-              this.hideLoader();
+              
             });
           });
           
+          
         }); 
+      }
+      
+      
+      rootPdfDonwload() {
+        //console.log("ROOOOOOOOT DOWNLAD")
+        this.platform.ready().then(() => {
+
+          this.presentLoading(); //Open Loading 
+          
+          let pathDevice = this.urlDevice;
+          this.cateogoriaRaiz.forEach(item => {
+            item.forEach(element => {
+
+              let url = encodeURI(`${this.urlAPI}${element.directory}`);
+              let id=element.id;
+              let directory=element.directory;
+              let name=element.name;
+              let namenew=element.namenew;
+              let categoryname=element.categoryname;
+              let created_at=element.created_at;
+              let updated_at=element.updated_at;
+              
+              //console.log(`${id} ${directory} ${name} ${namenew} ${categoryname} ${created_at} ${updated_at}`)
+  
+  
+              var pdfPath = `${pathDevice}${namenew}`;
+              const fileTransfer = this.transfer.create();
+              fileTransfer.download(url, pdfPath).then((entry) => {
+                //console.log('ROOOOOOOOT DOWNLOAD');
+                //console.log(`download completed: ${pdfPath} y su ID es: ${id}, con nombre: ${namenew}`);
+              }, (error) => {
+                console.log(error);
+              }); 
+              /*element.forEach(item => {
+                let arregloNuevo = item.documents;
+                arregloNuevo.forEach(element => {
+                  
+                  let url = encodeURI(`${this.urlAPI}${element.directory}`);
+                  console.log(url);
+                  console.log(element.id);
+                  console.log(element.user_id);
+                  console.log(element.categorization_id);
+                  console.log(element.directory);
+                  console.log(element.name);
+                  console.log(element.namenew);
+                  console.log(element.status);
+                  console.log(element.updated_at);
+                  console.log("******************************FILES**********************************");
+                  
+                  
+                  let id = element.id;
+                  let user_id = element.user_id;
+                  let categorization_id = element.categorization_id;
+                  let directory = element.directory;
+                  let name = element.name;
+                  let namenew = element.namenew;
+                  let status = element.status;
+                  let updated_at = element.updated_at;
+                  
+                  var imagePath = `${pathDevice}${namenew}`;
+                  const fileTransfer = this.transfer.create();
+                  fileTransfer.download(url, imagePath).then((entry) => {
+                    console.log(entry);
+                    console.log(`download completed: ${imagePath} y su ID es: ${id}, con nombre: ${namenew}`);
+                  }, (error) => {
+                    console.log(error);
+                  });
+                });
+                this.hideLoader();
+              });*/
+            });
+            });
+          
+        });
+      }
+      
+      
+      openPDFLocal(name) {
+        let filePath = this.urlDevice;
+        //let namefiel = namefiel;
+        //let nuevofield = namefiel.replace("uploads/", "");
+        //console.log(filePath + name);
+        if (this.platform.is('android')) {
+          this.fileOpener.open(filePath + name, 'application/pdf')
+          .then(() => console.log('File is opened'))
+          .catch(e => console.log('Error opening file', e));
+        }
       }
       
     }    
