@@ -4,27 +4,36 @@ import { Observable } from 'rxjs';
 import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 import { Router, ActivatedRoute, NavigationEnd, RouterEvent, Event } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { Platform } from '@ionic/angular';
+import { Platform, LoadingController } from '@ionic/angular';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
+
+import { FileTransfer, FileUploadOptions, FileTransferObject } from '@ionic-native/file-transfer/ngx';
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss']
 })
 export class Tab1Page {
+  fileTransfer: FileTransferObject = this.transfer.create();
   cateogoriaRaiz: Observable<any>;
   categories: Observable<any>;
   categoriesSqlite: Observable<any>;
+  urlAPI ='https://auradoc.bcnschool.net/backend/public/';
+  urlDevice = 'file:///storage/emulated/0/Download/AppAura/';
   categoriaSinInternet;
   categoriaRoot;
   createDBsqlite;
+  loaderToShow;
   
   constructor(
     private apirest: ApiRestService, 
     private sqlite: SQLite,
     private router: Router, 
     private platform: Platform,
-    private nativeStorage: NativeStorage
+    private nativeStorage: NativeStorage,
+    private transfer: FileTransfer,
+    public loadingController: LoadingController
     ) { 
       
       
@@ -122,6 +131,7 @@ export class Tab1Page {
                     db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`))
                   }
                   this.queryCategories();
+                  this.pdfDonwload();
                 })
               })
             })
@@ -175,6 +185,7 @@ export class Tab1Page {
           }, (error) => {
           })
         })
+        
         return this.categoriaSinInternet;
       }
       
@@ -202,4 +213,74 @@ export class Tab1Page {
         })
         return this.categoriaSinInternet;
       }
+      
+      async presentLoading() {
+        this.loaderToShow = this.loadingController.create({
+          message: 'Espere por favor... estamos actualizando los docuemtnos.'
+        }).then((res) => {
+          res.present();
+          res.onDidDismiss().then((dis) => {
+            console.log('Loading dismissed! after 2 Seconds');
+          });
+        });
+      }
+      
+      hideLoader() {
+        setTimeout(() => {
+          this.loadingController.dismiss();
+        }, 4000);
+      }
+      
+      
+      pdfDonwload(){ 
+        this.platform.ready().then(() => { 
+          
+          
+          let loading=this.presentLoading();
+          console.log(loading);
+          
+          let pathDevice = this.urlDevice;
+          this.categories.forEach(element => {
+            element.forEach(item => {
+              let arregloNuevo = item.documents;
+              arregloNuevo.forEach(element => {
+                
+                let url = encodeURI(`${this.urlAPI}${element.directory}`);
+                console.log(url);
+                console.log(element.id);
+                console.log(element.user_id);
+                console.log(element.categorization_id);
+                console.log(element.directory);
+                console.log(element.name);
+                console.log(element.namenew);
+                console.log(element.status);
+                console.log(element.updated_at);
+                console.log("******************************FILES**********************************");
+                
+                
+                let id= element.id;
+                let user_id= element.user_id;
+                let categorization_id= element.categorization_id;
+                let directory= element.directory;
+                let name= element.name;
+                let namenew= element.namenew;
+                let status= element.status;
+                let updated_at= element.updated_at;
+                
+                var imagePath = `${pathDevice}${namenew}`;
+                const fileTransfer = this.transfer.create();
+                fileTransfer.download(url, imagePath).then((entry) => {
+                  console.log(entry);
+                  console.log(`download completed: ${imagePath} y su ID es: ${id}, con nombre: ${namenew}`);
+                }, (error) => {
+                  console.log(error);
+                });              
+              });
+              this.hideLoader();
+            });
+          });
+          
+        }); 
+      }
+      
     }    

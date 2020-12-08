@@ -14,6 +14,9 @@ import { NativeStorage } from '@ionic-native/native-storage/ngx';
 import { SQLite } from '@ionic-native/sqlite/ngx';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
+import { FileTransfer } from '@ionic-native/file-transfer/ngx';
+
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
@@ -24,6 +27,7 @@ import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
     SQLite,
     AndroidPermissions,
     NativeStorage,
+    FileTransfer,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]
