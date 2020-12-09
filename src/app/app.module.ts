@@ -14,8 +14,9 @@ import { NativeStorage } from '@ionic-native/native-storage/ngx';
 import { SQLite } from '@ionic-native/sqlite/ngx';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
-import { FileTransfer } from '@ionic-native/file-transfer/ngx';
 import { FileOpener } from '@ionic-native/file-opener/ngx';
+import { File } from '@ionic-native/file/ngx';
+import { Downloader } from '@ionic-native/downloader/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -23,12 +24,13 @@ import { FileOpener } from '@ionic-native/file-opener/ngx';
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, HttpClientModule],
   providers: [
     StatusBar,
+    File,
     SplashScreen,
     SQLite,
+    Downloader,
     FileOpener,
     AndroidPermissions,
     NativeStorage,
-    FileTransfer,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]
