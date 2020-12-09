@@ -14,7 +14,7 @@
     </ion-refresher-content>
   </ion-refresher>
   <ion-list>
-    <ion-item button *ngFor="let item of categoriaSinInternet">
+    <ion-item button *ngFor="let item of categoriaSinInternet" (click)="categoryDetail(item.name, item.id)">
       <ion-avatar>
         <img src="assets/folder.png">
       </ion-avatar>

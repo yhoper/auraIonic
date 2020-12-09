@@ -42,17 +42,17 @@ export class LoginPage implements OnInit {
         onSubmit() {    
           this.submitted = true;
           if (!this.formLogin.valid) {
-            console.log('All fields are required.')
+          //  console.log('All fields are required.')
             return false;
           }else{
             this.apirest.login(this.formLogin.value)
             .subscribe(
               (response) => {
                 if (this.formLogin.value.remember == true) {
-                  console.log(`Estas autorizado para realizar el login, y pidio recordar su usuario y clave. GUARDO LA INFO y llamo a GET USER `)
+                //  console.log(`Estas autorizado para realizar el login, y pidio recordar su usuario y clave. GUARDO LA INFO y llamo a GET USER `)
                   this.getUser(response, true);
                 }else{
-                  console.log(`Estas autorizado para realizar el login, llamo a GET USER`);
+                  //console.log(`Estas autorizado para realizar el login, llamo a GET USER`);
                   this.getUser(response, false);
                 }
               },
@@ -69,21 +69,21 @@ export class LoginPage implements OnInit {
             this.apirest.getUser(token, data.expires_at)
             .subscribe(
               (response)=>{
-                console.log(response)
+                //console.log(response)
                 
                 //recordar data del Usuario Api 
                 this.nativeStorage.setItem('userLogin', response)
                 .then(
-                  () => console.log('Stored guradado'),
-                  error => console.error(`Error storing item, ${error}`)
+                  () => console.log('Stored guradado getUser'),
+                  error => console.error(`Error storing item getUser, ${error}`)
                   );
                   
                   if(rememberuser==true){
                     //recordar data del Usuario
                     this.nativeStorage.setItem('userRemember', true)
                     .then(
-                      () => console.log('Stored guradado'),
-                      error => console.error(`Error storing item, ${error}`)
+                      () => console.log('Stored guradado rememberuser'),
+                      error => console.error(`Error storing item rememberuser, ${error}`)
                       );
                     }
                     this.router.navigateByUrl(`tabs/tab1`);
