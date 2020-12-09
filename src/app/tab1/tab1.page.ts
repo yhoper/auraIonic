@@ -144,6 +144,7 @@ export class Tab1Page {
                 let docs = JSON.stringify(item.documents);              
                 db.executeSql('select * from categorias WHERE id =' + `${id}`, []).then(data => {
                   console.log(data.rows.length);
+                  //Se dbe eliminar toda la BD
                   if (data.rows.length > 0) {
                     this.updateCategories(id, name, description, status, docs);
                   } else {
