@@ -36,7 +36,7 @@ export class Tab1Page {
     public loadingController: LoadingController,
     private fileOpener: FileOpener,
     private downloader: Downloader,
-    private fileSystem: File
+    private file: File
     
     ) { 
       
@@ -342,21 +342,74 @@ export class Tab1Page {
       
       downloadFiles(url, namenew){
         
-        var request: DownloadRequest = {
-          uri: url,
-          title: `${namenew}`,
-          description: '',
-          mimeType: '',
-          visibleInDownloadsUi: true,
-          destinationInExternalFilesDir: {
-            dirType: 'Downloads',
-            subPath: `${namenew}`
+        
+        console.log(this.file.dataDirectory);
+        this.platform.ready().then(() => {
+          if (this.platform.is('android')) {
+            
+            //let path = `${this.file.externalRootDirectory}/Download`;
+            let path ='file:///storage/emulated/0/Android/data/com.aura.procedimiento/files/Downloads/';
+            
+            /*this.file.checkDir(path, 'AuraApp').then(response => {
+              console.log('Directory exists' + response);
+            }).catch(err => {
+              console.log('Directory doesn\'t exist' + JSON.stringify(err));
+              this.file.createDir(path, 'AuraApp', false).then(response => {
+                console.log('Directory create' + response);
+              }).catch(err => {
+                console.log('Directory no create' + JSON.stringify(err));
+              });
+            });*/
+            
+            
+            this.file.checkFile(path, namenew).then(response=>{
+              
+              console.log(`El archivo existe ${response}`);
+ 
+              
+              /*this.file.removeFile(path, namenew).then(response => {
+                console.log('Directory exists' + response);
+              }).catch(err => {
+                console.log('El archivo ha sido eliminado con exito' + JSON.stringify(err));
+              })*/
+              
+              
+              
+            }).catch(err=>{
+              console.log('El archivo no existe' + JSON.stringify(err));
+              
+              
+              var request: DownloadRequest = {
+                uri: url,
+                title: `${namenew}`,
+                description: '',
+                mimeType: '',
+                visibleInDownloadsUi: true,
+                destinationInExternalFilesDir: {
+                  dirType: `Downloads`,
+                  subPath: `${namenew}`
+                }
+              };
+              this.downloader.download(request)
+              .then((location: string) => console.log(`File downloaded at: ${location} de nombre ${namenew}`))
+              .catch((error: any) => console.error(error));
+              
+              
+              
+            })
+            
+            
+            
+            
+            
           }
-        };
-        this.downloader.download(request)
-        .then((location: string) => console.log(`File downloaded at: ${location} de nombre ${namenew}`))
-        .catch((error: any) => console.error(error));
+        });
+        
+        
       }
+      
+      
+      
       openPDFLocal(name) {
         let path = this.urlDevice+name;
         if (this.platform.is('android')) {
