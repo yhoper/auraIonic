@@ -4,8 +4,12 @@ import { Observable } from 'rxjs';
 import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 import { Router, ActivatedRoute, NavigationEnd, RouterEvent, Event } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { Platform } from '@ionic/angular';
+import { Platform, LoadingController } from '@ionic/angular';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
+import { FileOpener } from '@ionic-native/file-opener/ngx';
+import { File } from '@ionic-native/file/ngx';
+import { Downloader, DownloadRequest } from '@ionic-native/downloader/ngx';
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -15,16 +19,25 @@ export class Tab1Page {
   cateogoriaRaiz: Observable<any>;
   categories: Observable<any>;
   categoriesSqlite: Observable<any>;
+  urlAPI ='https://auradoc.bcnschool.net/backend/public/';
+  urlDevice = 'file:///storage/emulated/0/Android/data/com.aura.procedimiento/files/Downloads/';
+  //declare var require: any
   categoriaSinInternet;
   categoriaRoot;
   createDBsqlite;
+  loaderToShow;
   
   constructor(
     private apirest: ApiRestService, 
     private sqlite: SQLite,
     private router: Router, 
     private platform: Platform,
-    private nativeStorage: NativeStorage
+    private nativeStorage: NativeStorage,
+    public loadingController: LoadingController,
+    private fileOpener: FileOpener,
+    private downloader: Downloader,
+    private fileSystem: File
+    
     ) { 
       
       
@@ -43,7 +56,12 @@ export class Tab1Page {
       //this.callModalPermisssion()
       this.apirest.ionPermissionInitial().then((value) => {
         this.nativeStorage.setItem('androidPermission', value)
-        if (value == false)  this.callModalPermisssion();
+        if (value == false)  {
+          this.callModalPermisssion();
+        }else{
+          this.categoriesPdfDonwload();
+          this.rootPdfDonwload();
+        }
       });
       this.refreshPage()
     } 
@@ -60,6 +78,11 @@ export class Tab1Page {
     callModalPermisssion(){
       this.apirest.ionPermission().then((value) => {
         this.nativeStorage.setItem('androidPermission', value)
+        //console.log(value);
+        if(value==true){
+          this.categoriesPdfDonwload();
+          this.rootPdfDonwload();
+        }
       });
     }
     
@@ -92,13 +115,16 @@ export class Tab1Page {
                 let categoryname = item.categoryname;
                 let created_at = item.created_at;
                 let updated_at = item.updated_at;
-                console.log(`Data: ${id}, ${directory}, ${name}, ${namenew}, ${categoryname}, ${created_at}, ${updated_at}`)
+                //console.log(`Data: ${id}, ${directory}, ${name}, ${namenew}, ${categoryname}, ${created_at}, ${updated_at}`)
                 
                 db.executeSql('select * from categoriaroot WHERE id =' + `${id}` , []).then(data => {
                   if (data.rows.length > 0) {
                     this.updateCategoriesrRoot(id, directory, name, namenew, categoryname, created_at, updated_at);
                   } else {
-                    db.executeSql('INSERT INTO categoriaroot VALUES (?,?,?,?,?,?,?)', [`${id}`, `${directory}`, `${name}`, `${namenew}`, `${categoryname}`, `${created_at}`, `${updated_at}`]).then(() => console.log(`INSERT CATEGORIAS ROOT el id ${id}, de nombre ${name}, y docuemtnos: ${updated_at}`))
+                    db.executeSql('INSERT INTO categoriaroot VALUES (?,?,?,?,?,?,?)', [`${id}`, `${directory}`, `${name}`, `${namenew}`, `${categoryname}`, `${created_at}`, `${updated_at}`]).then(() => 
+                    console.log(`INSERT CATEGORIAS ROOT`)
+                    //console.log(`INSERT CATEGORIAS ROOT el id ${id}, de nombre ${name}, y docuemtnos: ${updated_at}`)
+                    )
                   }
                   this.queryCategoriesRoot();
                 })
@@ -116,12 +142,20 @@ export class Tab1Page {
                 let status = item.status;
                 let docs = JSON.stringify(item.documents);              
                 db.executeSql('select * from categorias WHERE id =' + `${id}`, []).then(data => {
+                  //alert(`Selecciona todas las categorías del id: ${id} el total del rowLenght es de: ${data.rows.length}`);
+                  console.log(data.rows.length);
                   if (data.rows.length > 0) {
+                    //alert(`UPDATE categorias ${id}, ${name}`)
                     this.updateCategories(id, name, description, status, docs);
                   } else {
-                    db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`))
+                    //alert(`Insert categorias ${id}, ${name}`)
+                    db.executeSql('INSERT INTO categorias VALUES (?,?,?,?,?)', [`${id}`, `${name}`, `${description}`, `${status}`, `${docs}`]).then(() => 
+                    console.log(`INSERT CATEGORIAS`)
+                    //console.log(`INSERT CATEGORIAS el id ${id}, de nombre ${name}, y docuemtnos: ${docs}`)
+                    )
                   }
                   this.queryCategories();
+                  
                 })
               })
             })
@@ -175,6 +209,7 @@ export class Tab1Page {
           }, (error) => {
           })
         })
+        
         return this.categoriaSinInternet;
       }
       
@@ -202,4 +237,133 @@ export class Tab1Page {
         })
         return this.categoriaSinInternet;
       }
+      
+      
+      async presentLoading() {
+        const loading = await this.loadingController.create({
+          cssClass: 'my-custom-class',
+          message: 'Espere por favor, estamos actualizando los documentos',
+          duration: 5000
+        });
+        await loading.present();
+        
+        const { role, data } = await loading.onDidDismiss();
+        console.log('Loading dismissed!');
+      }
+      
+      
+      async hideLoader() {
+        const loader = this.loadingController.getTop();
+        (await loader).parentNode.removeChild(await loader);
+      }
+      
+      
+      
+      categoriesPdfDonwload(){
+        // console.log('ahora estoy en categoriesPDFDownload');
+        this.platform.ready().then(() => {           
+          //console.log(loading);
+          this.presentLoading(); //Open Loading
+          
+          let pathDevice = this.urlDevice;
+          this.categories.forEach(element => {
+            element.forEach(item => {
+              let arregloNuevo = item.documents;
+              arregloNuevo.forEach(element => {
+                
+                let url = encodeURI(`${this.urlAPI}${element.directory}`);
+                /*console.log(url);
+                console.log(element.id);
+                console.log(element.user_id);
+                console.log(element.categorization_id);
+                console.log(element.directory);
+                console.log(element.name);
+                console.log(element.namenew);
+                console.log(element.status);
+                console.log(element.updated_at);
+                console.log("******************************FILES**********************************");*/
+                
+                
+                let id= element.id;
+                let user_id= element.user_id;
+                let categorization_id= element.categorization_id;
+                let directory= element.directory;
+                let name= element.name;
+                let namenew= element.namenew;
+                let status= element.status;
+                let updated_at= element.updated_at;
+                
+                var pdfPath = `${pathDevice}${namenew}`;
+                /*const fileTransfer = this.transfer.create();
+                fileTransfer.download(url, pdfPath).then((entry) => {
+                }, (error) => {
+                  console.log(error);
+                });
+                */
+              });
+              
+            });
+          });
+          
+          
+        }); 
+      }
+      
+      
+      rootPdfDonwload() {
+        //console.log("ROOOOOOOOT DOWNLAD")
+        this.platform.ready().then(() => {
+          
+          this.presentLoading(); //Open Loading 
+          
+          let pathDevice = this.urlDevice;
+          this.cateogoriaRaiz.forEach(item => {
+            item.forEach(element => {
+              let url = encodeURI(`${this.urlAPI}${element.directory}`);
+              let id=element.id;
+              let directory=element.directory;
+              let name=element.name;
+              let namenew=element.namenew;
+              let categoryname=element.categoryname;
+              let created_at=element.created_at;
+              let updated_at=element.updated_at;
+              
+              console.log("******************descargar*************")
+              
+              
+              this.downloadFiles(url, namenew); 
+              console.log("******************descargar*************")
+            });
+          });
+          
+        });
+      }
+      
+      
+      downloadFiles(url, namenew){
+        
+        var request: DownloadRequest = {
+          uri: url,
+          title: `${namenew}`,
+          description: '',
+          mimeType: '',
+          visibleInDownloadsUi: true,
+          destinationInExternalFilesDir: {
+            dirType: 'Downloads',
+            subPath: `${namenew}`
+          }
+        };
+        this.downloader.download(request)
+        .then((location: string) => console.log(`File downloaded at: ${location} de nombre ${namenew}`))
+        .catch((error: any) => console.error(error));
+      }
+      openPDFLocal(name) {
+        let path = this.urlDevice+name;
+        if (this.platform.is('android')) {
+          this.fileOpener.open(path, 'application/pdf')
+          .then(() => console.log('File is opened'))
+          .catch(e => console.log('Error opening file', e));
+        }
+      }
+      
     }    

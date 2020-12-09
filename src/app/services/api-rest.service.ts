@@ -11,7 +11,7 @@ import { NativeStorage } from '@ionic-native/native-storage/ngx';
 })
 export class ApiRestService {
   urlAuth ='https://auradoc.bcnschool.net/api/auth/';
-  categoryUrl ='http://auradoc.bcnschool.net/api/v1/';
+  categoryUrl ='https://auradoc.bcnschool.net/api/v1/';
   permisos;
   constructor(
     private http: HttpClient, 

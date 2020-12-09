@@ -1,0 +1,21 @@
+/* DOES NOT WORK - not specific enough */
+ion-loading {
+  color: green;
+}
+
+/* Works - pass "my-custom-class" in cssClass to increase specificity */
+.my-custom-class {
+  color: green;
+}
+.blur {
+    box-shadow: 0px 0px 20px 20px rgba(255,255,255,1) !important;
+    text-shadow: 0px 0px 10px rgba(255, 255, 255, 0.034) !important;
+    transform: scale(0.9) !important;
+    opacity: 0.6 !important;
+}
+.my-custom-class {
+  --background: #222;
+  --spinner-color: #fff;
+
+  color: #fff;
+}
