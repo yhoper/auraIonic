@@ -28,6 +28,7 @@ export class Tab1Page {
   createDBsqlite;
   loaderToShow;
   variableGlobal;
+  uid;
   constructor(
     private apirest: ApiRestService, 
     private sqlite: SQLite,
@@ -41,7 +42,15 @@ export class Tab1Page {
     ) { 
       
       
-      
+    this.nativeStorage.getItem('userLogin')
+      .then(
+        data => {
+          console.log(data);
+          this.uid = data.id;
+
+        },
+        error => console.error(error.exception)
+      );
       
     }
     
@@ -62,8 +71,8 @@ export class Tab1Page {
         }else{
           
           //this.platform.ready().then(() => {
-          this.categories = this.apirest.getCategories(2);
-          this.cateogoriaRaiz = this.apirest.getCategoryRoot(2);
+          this.categories = this.apirest.getCategories(this.uid);
+          this.cateogoriaRaiz = this.apirest.getCategoryRoot(this.uid);
           this.createDbSqlite(this.categories, this.cateogoriaRaiz);
           //});
           
