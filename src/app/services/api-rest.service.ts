@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { AlertController, NavController } from '@ionic/angular';
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 import { Platform } from '@ionic/angular';
 import { NativeStorage } from '@ionic-native/native-storage/ngx';
-
+import { Network } from '@ionic-native/network/ngx';
 @Injectable({
   providedIn: 'root'
 })
 export class ApiRestService {
   urlAuth ='https://auradoc.bcnschool.net/api/auth/';
   categoryUrl ='https://auradoc.bcnschool.net/api/v1/';
+  
+  private online: Observable<boolean> = null;
+  private hasConnection = new BehaviorSubject(false);
+  
   permisos;
   constructor(
     private http: HttpClient, 
@@ -19,8 +23,29 @@ export class ApiRestService {
     private platform: Platform,
     private androidPermissions: AndroidPermissions,
     public navCtrl: NavController,
-    private nativeStorage: NativeStorage
-    ) { }
+    private network: Network,
+    private nativeStorage: NativeStorage,
+    
+    ) {
+      
+      if (this.platform.is('cordova')) {
+        // on Device
+        this.network.onConnect().subscribe(() => {
+          console.log('network was connected :-)');
+          this.hasConnection.next(true);
+          return;
+        });
+        this.network.onDisconnect().subscribe(() => {
+          console.log('network was disconnected :-(');
+          this.hasConnection.next(false);
+          return;
+        });
+      } 
+      this.testNetworkConnection();
+      
+      
+      
+    }
     
     login(data: any): Observable<any> {
       
@@ -105,6 +130,7 @@ export class ApiRestService {
           );
         });
       }
+       
       
       ionPermission():Promise<boolean>{
         return new Promise(resolve => {
@@ -157,5 +183,38 @@ export class ApiRestService {
         
         
         
-      }
-      
+        public getNetworkType(): string {
+          return this.network.type;
+        }
+        
+        public getNetworkStatus(): Observable<boolean> {
+          return this.hasConnection.asObservable();
+        }
+        
+        private getNetworkTestRequest(): Observable<any> {
+          return this.http.get('https://jsonplaceholder.typicode.com/todos/1');
+        }
+        
+        public async testNetworkConnection() {
+          try {
+            this.getNetworkTestRequest().subscribe(
+              success => {
+                // console.log('Request to Google Test  success', success);
+                this.hasConnection.next(true);
+                return;
+              }, error => {
+                // console.log('Request to Google Test fails', error);
+                this.hasConnection.next(false);
+                return;
+              });
+            } catch (err) {
+              console.log('err testNetworkConnection', err);
+              this.hasConnection.next(false);
+              return;
+            }
+          }
+          
+          
+          
+        }
+        
