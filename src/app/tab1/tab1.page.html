@@ -1,11 +1,21 @@
 <ion-header [translucent]="true">
-  <ion-toolbar (click)="actualizarClick()">
-    <ion-title>
-      <center>
-        <img src="assets/logo.png" style="height: 50px;">
-      </center>
-    </ion-title>
-  </ion-toolbar>
+
+<ion-toolbar>
+  <ion-buttons slot="start"  (click)="permisoAndroid()">
+    <ion-icon slot="icon-only" name="reload-circle-outline"></ion-icon>
+  </ion-buttons>
+  <ion-buttons slot="primary">
+    
+      V 0.0.1
+    
+  </ion-buttons>
+
+  <ion-title>
+    <center>
+    <img src="assets/logo.png" style="height: 50px;">
+  </center>
+</ion-title>
+</ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
