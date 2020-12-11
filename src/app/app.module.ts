@@ -17,6 +17,7 @@ import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 import { FileOpener } from '@ionic-native/file-opener/ngx';
 import { File } from '@ionic-native/file/ngx';
 import { Downloader } from '@ionic-native/downloader/ngx';
+import { Network } from '@ionic-native/network/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -28,6 +29,7 @@ import { Downloader } from '@ionic-native/downloader/ngx';
     SplashScreen,
     SQLite,
     Downloader,
+    Network,
     FileOpener,
     AndroidPermissions,
     NativeStorage,
