@@ -18,6 +18,7 @@ import { FileOpener } from '@ionic-native/file-opener/ngx';
 import { File } from '@ionic-native/file/ngx';
 import { Downloader } from '@ionic-native/downloader/ngx';
 import { Network } from '@ionic-native/network/ngx';
+import { AppVersion } from '@ionic-native/app-version/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -30,6 +31,7 @@ import { Network } from '@ionic-native/network/ngx';
     SQLite,
     Downloader,
     Network,
+    AppVersion,
     FileOpener,
     AndroidPermissions,
     NativeStorage,
