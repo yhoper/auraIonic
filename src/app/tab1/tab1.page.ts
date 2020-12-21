@@ -11,7 +11,7 @@ import { File } from '@ionic-native/file/ngx';
 import { Downloader, DownloadRequest } from '@ionic-native/downloader/ngx';
 import { __core_private_testing_placeholder__ } from '@angular/core/testing';
 import { Network } from '@ionic-native/network/ngx';
-
+import { AppVersion } from '@ionic-native/app-version/ngx';
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -30,6 +30,7 @@ export class Tab1Page {
   loaderToShow;
   variableGlobal;
   uid;
+  versionapp;
   inter;
   isConnected;
   categoriaLocal=[];
@@ -48,8 +49,12 @@ export class Tab1Page {
     private fileOpener: FileOpener,
     private downloader: Downloader,
     private file: File,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private appVersion: AppVersion
     ) { 
+    this.appVersion.getVersionNumber().then((value)=>{
+      this.versionapp = value;
+    });
       this.nativeStorage.getItem('userLogin')
       .then(
         data => {
